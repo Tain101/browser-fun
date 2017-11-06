@@ -1,25 +1,29 @@
 // 2d array
 // n 'bots' grabbing amd moving squares
 // each bot is tied to a specific row/column
-let canvas  = document.getElementById("canvas");
-let context = canvas.getContext("2d");
+let canvas  = document.getElementById('canvas');
+let context = canvas.getContext('2d');
 canvas.width  = window.innerWidth*0.9;
 canvas.height = window.innerHeight*0.9;
-// const width = 300;
-// const height = 300;
+const mapWidth  = 6;
+const mapHeight = 108;
+if(x = y){
+
+}
 
 class Map{
 	constructor(width = 10, height = 10){
 		this.width  = width;
-		this.height = height;
 		//create a 2d array of sorted colors
 		this.array = 	[...Array(width)].map((xVal, xIndex) => {
 						return [...Array(height)].map((yVal, yIndex) => {
 							let red   = 255 * (xIndex/width);
 							let green = 255 * (yIndex/height);
 							let blue  = 0;// 255 * ((x+y)/(width+height));
+							let index = {x:xIndex, y:yIndex};
+							let score = (xIndex*width) + yIndex;
 
-							return new Square(red, green, blue, {x:xIndex, y:yIndex}, xIndex*width + yIndex);
+							return new Square(red, green, blue, index, score);
 						});
 					});
 
@@ -37,7 +41,12 @@ class Map{
 		this.array.forEach((val, xIndex) =>{
 			val.forEach((square, yIndex) =>{
 				context.fillStyle = square.getColor();
-				context.fillRect( (square.position.x/this.width)*canvas.width, (square.position.y/this.height)*canvas.height, canvas.width/this.width+1, canvas.height/this.height+1 );
+				context.fillRect(
+					(square.position.x/this.width)  * canvas.width,
+					(square.position.y/this.height) * canvas.height,
+					canvas.width/this.width+1,
+					canvas.height/this.height+1
+				);
 			});
 		});
 	}
@@ -49,14 +58,17 @@ class Map{
 
 		while(remaining >= 0){
 			index = Math.floor(Math.random() * remaining);
-			this.swapSquares(this.array[Math.floor(remaining/this.height)][remaining%this.height], this.array[Math.floor(index/this.height)][index%this.height]);
+			this.swapSquares(
+				this.array[Math.floor(remaining/this.height)][remaining%this.height],
+				this.array[Math.floor(index/this.height)][index%this.height]
+			);
 
 			remaining -= 1;
 		}
 	}
 	swapSquares(one, two){
 		let temp = this.array[one.position.x][one.position.y];
-		this.array[one.position.x][one.position.y] = this.array[two.position.x][two.position.y] ;
+		this.array[one.position.x][one.position.y] = this.array[two.position.x][two.position.y];
 		this.array[two.position.x][two.position.y] = temp;
 
 		temp         = {...one.position};
@@ -74,7 +86,7 @@ class Map{
 		if(returnSquare !== null){
 			return returnSquare;
 		}
-		throw "invalid getHome position: [" + homePosition.x +", " + homePosition.y + "]";
+		throw 'invalid getHome position: [' + homePosition.x + ', ' + homePosition.y + ']';
 	}
 	checkIfSolved(){
 		let solved = true;
@@ -84,6 +96,7 @@ class Map{
 				solved = false;
 			}
 		}));
+
 		return solved;
 	}
 }
@@ -99,7 +112,7 @@ class Square{
 		this.score    = score;
 	}
 	getColor(){
-		return"rgba("+this.red+","+this.green+","+this.blue+")";
+		return'rgba(' + this.red + ',' + this.green + ',' + this.blue + ')';
 	}
 	setColor(red, green, blue){
 		this.red   = red;
@@ -124,39 +137,8 @@ class MapSolver{
 		if(map.checkIfSolved()){
 			map.scramble();
 		}
-		//find lowest *unsorted* square
-		//move 1x or 1y towards home
-		//loop
-		if(!this.isMoving){
 
-			if(this.inventory.position.y === (this.map.height - 1)){
-				this.inventory = this.map.getHome({x: ((this.inventory.position.x+1) % this.map.width), y: 0});
-			}else{
-				this.inventory = this.map.getHome({x: this.inventory.position.x,  y: this.inventory.position.y+1});
-			}
-
-			this.isMoving = true;
-			return;
-		}
-		if(this.inventory.position.x === this.inventory.home.x &&
-			this.inventory.position.y === this.inventory.home.y ){
-			this.isMoving = false;
-			return;
-		}
-
-		if(Math.random() > 0.5){
-			if(this.inventory.position.x !== this.inventory.home.x){
-				this.moveX();
-			} else {
-				this.moveY();
-			}
-		} else {
-			if(this.inventory.position.y !== this.inventory.home.y){
-				this.moveY();
-			} else {
-				this.moveX();
-			}
-		}
+		WalkSort(this);
 	}
 	moveX(){
 		if(this.inventory.position.x === this.inventory.home.x){
@@ -219,7 +201,7 @@ class Bot{
 }
 
 // let map = new Map(192,108);
-let map = new Map(190,10);
+let map = new Map(mapWidth, mapHeight);
 let mapSolver = new MapSolver(map);
 let interval = null;
 
