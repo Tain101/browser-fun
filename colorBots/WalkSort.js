@@ -1,4 +1,6 @@
 // FIXME: dont pass thw solver to this, try and flip it?
+// the sort should hold the index not the solver?
+// because not all solvers have the same number of indexes
 /**
  * The first sort made. Was supposed to be similar to insertion/bubble sort.
  * Uses swaps to move each square to the correct position.
@@ -7,7 +9,10 @@
  * @param {[type]} mapSolver [description]
  */
 
-const WalkSort = function weirdBubbleSort(mapSolver) {
+// export default walkSort;
+
+
+const walkSort = function weirdBubbleSort(mapSolver) {
 	/**
 	 * find lowest *unsorted* square
 	 * move 1x or 1y towards home
@@ -26,6 +31,7 @@ const WalkSort = function weirdBubbleSort(mapSolver) {
 			});
 		}
 
+		// TODO: this is logically backwards as well
 		mapSolver.isMoving = true;
 		return;
 	}
@@ -48,5 +54,3 @@ const WalkSort = function weirdBubbleSort(mapSolver) {
 		mapSolver.moveX();
 	}
 };
-
-export default WalkSort;
