@@ -5,10 +5,38 @@
 
 const canvas  = document.getElementById('canvas');
 const context = canvas.getContext('2d');
-canvas.width  = window.innerWidth *  0.9;
+canvas.width  = window.innerWidth  * 0.9;
 canvas.height = window.innerHeight * 0.9;
-const mapWidth  = 6;
-const mapHeight = 18;
+const mapWidth  = 4;
+const mapHeight = 4;
+
+class Square {
+	constructor(red, green, blue, position, score) {
+		this.red      = red;
+		this.green    = green;
+		this.blue     = blue;
+		this.position = position;
+		this.score    = score;
+	}
+
+	getColor() {
+		// return `rgba( 191 , 0 , 0 , 1)`;
+		return `rgba( ${Math.floor(this.red)} , ${Math.floor(this.green)} , ${Math.floor(this.blue)} , 1)`;
+	}
+
+	setColor(red, green, blue) {
+		this.red   = red;
+		this.green = green;
+		this.blue  = blue;
+
+		return this;
+	}
+
+	setPosition({x, y}) {
+		this.position.x = x;
+		this.position.y = y;
+	}
+}
 
 class Map {
 	constructor(width = 10, height = 10) {
@@ -33,6 +61,11 @@ class Map {
 
 	getSquare({ x, y }) {
 		return this.array[x][y];
+	}
+
+	setSquare({x, y}, square) {
+		this.array[x][y] = square;
+		square.position = {x, y};
 	}
 
 	setColor({ x, y }, color) {
@@ -62,22 +95,24 @@ class Map {
 		while (remaining >= 0) {
 			index = Math.floor(Math.random() * remaining);
 			this.swapSquares(
-				this.array[Math.floor(remaining / this.height)][remaining % this.height],
-				this.array[Math.floor(index / this.height)][index % this.height]
+				{	x: Math.floor(remaining / this.height),
+					y: remaining % this.height
+				},
+				{	x: Math.floor(index / this.height),
+					y: index % this.height
+				}
 			);
 
 			remaining -= 1;
 		}
 	}
 
-	swapSquares(one, two) {
-		let temp = this.array[one.position.x][one.position.y];
-		this.array[one.position.x][one.position.y] = this.array[two.position.x][two.position.y];
-		this.array[two.position.x][two.position.y] = temp;
+	swapSquares(firstPosition, secondPosition) {
+		let temp = this.getSquare(firstPosition);
+		this.setSquare(firstPosition, this.getSquare(secondPosition));
+		this.setSquare(secondPosition, temp);
 
-		temp         = { ...one.position };
-		// one.position = { ...two.position };
-		// two.position = { ...temp };
+		return true;
 	}
 
 	getHome(homePosition) {
@@ -96,6 +131,10 @@ class Map {
 		throw new Error(`invalid getHome position: [ ${homePosition.x}, ${homePosition.y} ]`);
 	}
 
+	getArray() {
+		return this.array;
+	}
+
 	checkIfSolved() {
 		let solved = true;
 		this.array.forEach((val) => {
@@ -111,46 +150,16 @@ class Map {
 	}
 }
 
-//
-class Square {
-	constructor(red, green, blue, position, score) {
-		this.red      = red;
-		this.green    = green;
-		this.blue     = blue;
-		this.position = position;
-		this.home     = position;
-		this.score    = score;
-	}
-
-	getColor() {
-		return `rgba( ${this.red} , ${this.green} , ${this.blue} + )`;
-	}
-
-	setColor(red, green, blue) {
-		this.red   = red;
-		this.green = green;
-		this.blue  = blue;
-
-		return this;
-	}
-
-	setPosition(x, y) {
-		this.position.x = x;
-		this.position.y = y;
-	}
-}
-
 class MapSolver {
 	constructor(map, sorter) {
 		this.map    = map;
-		this.sorter = sorter;
+		this.sorter = sorter(this.map.getArray()[0]);
 	}
 
 	step() {
-		if (this.sorter.done) {
+		if (this.sorter.next().done) {
 			this.map.scramble();
 		}
-		this.sorter.next(this.map.getArray());
 	}
 
 	walk() {
@@ -204,9 +213,9 @@ class Bot {
 		this.direction = direction;
 	}
 
-	goTo (position) {
+	// goTo(position) {
 
-	}
+	// }
 
 	pickUp() {
 		this.inventory = this.map.getSquare(this.position);
@@ -235,14 +244,18 @@ class Bot {
 	}
 }
 
+const compare = function compare(valOne, valTwo){
+	return valOne - valTwo;
+}
+
 // let map = new Map(192,108);
 const map = new Map(mapWidth, mapHeight);
 const solver = InsertionSort;
 const mapSolver = new MapSolver(map, solver);
 let interval = null;
 
-const fps = 60;
-const tick = function tick () {
+const fps = 3;
+const tick = function tick() {
 	try {
 		mapSolver.step();
 		map.draw();
