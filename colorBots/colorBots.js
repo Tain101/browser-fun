@@ -7,8 +7,8 @@ const canvas  = document.getElementById('canvas');
 const context = canvas.getContext('2d');
 canvas.width  = window.innerWidth  * 0.9;
 canvas.height = window.innerHeight * 0.9;
-const mapWidth  = 4;
-const mapHeight = 4;
+const mapWidth  = Math.floor(window.innerWidth  / 10);
+const mapHeight = Math.floor(window.innerHeight  / 10);
 
 class Square {
 	constructor(red, green, blue, position, score) {
@@ -64,8 +64,8 @@ class Map {
 	}
 
 	setSquare({x, y}, square) {
-		this.array[x][y] = square;
-		square.position = {x, y};
+		this.array[x][y]          = square;
+		this.array[x][y].position = {x, y};
 	}
 
 	setColor({ x, y }, color) {
@@ -82,6 +82,14 @@ class Map {
 					canvas.width / this.width + 1,
 					canvas.height / this.height + 1
 				);
+
+				context.fillStyle = "blue";
+				context.font = "30px Arial";
+				// context.fillText(
+				// 	square.score,
+				// 	((square.position.x / this.width) * canvas.width) + 0.5 * (canvas.width / this.width + 1),
+				// 	((square.position.y / this.height) * canvas.height) + 0.5 * (canvas.height / this.height + 1)
+				// 	);
 			});
 		});
 	}
@@ -153,12 +161,51 @@ class Map {
 class MapSolver {
 	constructor(map, sorter) {
 		this.map    = map;
-		this.sorter = sorter(this.map.getArray()[0]);
+		// this.sorter = sorter(this.map.getArray()[0]);
+		this.arrayIndex = -1;
+		this.arrayDirection = "vertical";
+		this.sorter = sorter;
+		this.stepper = this.sorter(this.getNextArray(), this.compare);
+
+	}
+	compare(squareOne, squareTwo) {
+		if(this.arrayDirection === "vertical"){
+			return squareOne.red - squareTwo.red;
+		} else {
+			return squareOne.green - squareTwo.green;
+		}
+	}
+	getNextArray(){
+		this.arrayIndex += 1;
+		if(this.arrayDirection === "vertical"){
+			if(this.arrayIndex >= this.map.width){
+				this.arrayIndex = -1;
+				this.arrayDirection = "horizontal";
+				return this.getNextArray();
+			}
+
+			return Array.from(this.map.getArray()[this.arrayIndex], (val) => {return val.position});
+		}else{
+			if(this.arrayIndex >= this.map.height){
+				this.arrayIndex = -1;
+				this.arrayDirection = "vertical";
+				return this.getNextArray();
+			}
+			const rArray = Array.from(this.map.getArray(), (val) => {return val[this.arrayIndex].position});
+			if(rArray[0] === undefined){
+				console.log(rArray);
+			}
+			return rArray;
+		}
+
 	}
 
 	step() {
-		if (this.sorter.next().done) {
-			this.map.scramble();
+		if (this.stepper.next().done) {
+			// this.map.scramble();
+			const array = this.getNextArray();
+			// console.log(array);
+			this.stepper = this.sorter(array, this.compare);
 		}
 	}
 
@@ -225,18 +272,7 @@ class Bot {
 		this.inventory = null;
 	}
 
-	// draw() {
-
-	// }
-
 	tick() {
-		// find a square to pick up
-		// move to it
-		// pick it up
-		// find a position to drop it
-		// move to it
-		// drop it
-		// loop
 		if (this.inventory === null
 			&& this.goal === null) {
 			findSquare();
@@ -244,9 +280,9 @@ class Bot {
 	}
 }
 
-const compare = function compare(valOne, valTwo){
-	return valOne - valTwo;
-}
+// const compare = function compare(valOne, valTwo){
+// 	return valOne - valTwo;
+// }
 
 // let map = new Map(192,108);
 const map = new Map(mapWidth, mapHeight);
