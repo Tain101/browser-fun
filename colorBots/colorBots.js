@@ -5,10 +5,10 @@
 
 const canvas  = document.getElementById('canvas');
 const context = canvas.getContext('2d');
-canvas.width  = window.innerWidth  * 0.9;
-canvas.height = window.innerHeight * 0.9;
-const mapWidth  = Math.floor(window.innerWidth  / 10);
-const mapHeight = Math.floor(window.innerHeight  / 10);
+canvas.width  = window.innerWidth  * 0.99;
+canvas.height = window.innerHeight * 0.99;
+const mapWidth  = Math.floor(window.innerWidth  / 50);
+const mapHeight = Math.floor(window.innerHeight  / 50);
 
 class Square {
 	constructor(red, green, blue, position, score) {
