@@ -21,6 +21,7 @@ const InsertionSort = function* InsertionSort(array, compare) {
 			const squareTwo = map.getSquare(array[curIndex - 1]);
 			if(mapSolver.compare(squareOne, squareTwo) < 0){
 				map.swapSquares(squareOne.position, squareTwo.position);
+				// console.log(squareOne.position);
 				yield;
 			// 	const temp = {...array[curIndex]};
 			// 	array[curIndex] = {...array[curIndex - 1]};
@@ -31,7 +32,7 @@ const InsertionSort = function* InsertionSort(array, compare) {
 		}
 		index += 1;
 	}
-
+	yield;
 	return array;
 };
 
