@@ -7,8 +7,8 @@ const canvas  = document.getElementById('canvas');
 const context = canvas.getContext('2d');
 canvas.width  = window.innerWidth  * 0.9;
 canvas.height = window.innerHeight * 0.9;
-const mapWidth  = 4;
-const mapHeight = 4;
+const mapWidth  = 40;
+const mapHeight = 40;
 
 class Square {
 	constructor(red, green, blue, position, score) {
@@ -61,6 +61,10 @@ class Map {
 
 	getSquare({ x, y }) {
 		return this.array[x][y];
+	}
+
+	getScore({x, y}){
+		return this.getSquare({x:x, y:y}).score;
 	}
 
 	setSquare({x, y}, square) {
@@ -250,7 +254,7 @@ const compare = function compare(valOne, valTwo){
 
 // let map = new Map(192,108);
 const map = new Map(mapWidth, mapHeight);
-const solver = InsertionSort;
+const solver = BasketSort;
 const mapSolver = new MapSolver(map, solver);
 let interval = null;
 
