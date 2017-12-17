@@ -12,20 +12,27 @@ const swap = function swap(firstPosition, secondPosition) {
 	return array;
 };
 
-const InsertionSort = function* InsertionSort(array) {
+const InsertionSort = function* InsertionSort(array, compare) {
 	let index = 1;
 	while (index < array.length) {
 		let curIndex = index;
 		while (curIndex > 0) {
-			if(compare(array[curIndex].score, array[curIndex - 1].score) < 0){
-				map.swapSquares(array[curIndex].position, array[curIndex - 1].position);
+			const squareOne= map.getSquare(array[curIndex]);
+			const squareTwo = map.getSquare(array[curIndex - 1]);
+			if(mapSolver.compare(squareOne, squareTwo) < 0){
+				map.swapSquares(squareOne.position, squareTwo.position);
+				// console.log(squareOne.position);
+				yield;
+			// 	const temp = {...array[curIndex]};
+			// 	array[curIndex] = {...array[curIndex - 1]};
+			// 	array[curIndex - 1] = temp;
 			}
 			curIndex -= 1;
-			yield;
+			// yield;
 		}
 		index += 1;
 	}
-
+	yield;
 	return array;
 };
 

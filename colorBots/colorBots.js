@@ -5,10 +5,14 @@
 
 const canvas  = document.getElementById('canvas');
 const context = canvas.getContext('2d');
-canvas.width  = window.innerWidth  * 0.9;
-canvas.height = window.innerHeight * 0.9;
-const mapWidth  = 40;
-const mapHeight = 40;
+
+canvas.width  = window.innerWidth  * 0.99;
+canvas.height = window.innerHeight * 0.99;
+// const mapWidth  = Math.floor(window.innerWidth  / 50);
+const mapWidth  = 10;
+// const mapHeight = Math.floor(window.innerHeight  / 50);
+const mapHeight = 10;
+
 
 class Square {
 	constructor(red, green, blue, position, score) {
@@ -21,7 +25,12 @@ class Square {
 
 	getColor() {
 		// return `rgba( 191 , 0 , 0 , 1)`;
-		return `rgba( ${Math.floor(this.red)} , ${Math.floor(this.green)} , ${Math.floor(this.blue)} , 1)`;
+		return `rgba( ${Math.floor(255 * (this.red / mapWidth))} , ${Math.floor(255 * (this.green / mapHeight))} , ${Math.floor(this.blue)} , 1)`;
+		// const red = 255 * (this.position.x / mapWidth);
+		// const green = 255 * (this.position.y / mapHeight);
+		// const blue = 0;
+		// return `rgba( ${Math.floor(red)} , ${Math.floor(green)} , ${Math.floor(blue)} , 1)`;
+
 	}
 
 	setColor(red, green, blue) {
@@ -45,8 +54,8 @@ class Map {
 		// create a 2d array of sorted colors
 		this.array = 	[...Array(width)].map((xVal, xIndex) =>
 			[...Array(height)].map((yVal, yIndex) => {
-				const red   = 255 * (xIndex / width);
-				const green = 255 * (yIndex / height);
+				const red   = xIndex;
+				const green = yIndex;
 				const blue  = 0;// 255 * ((x+y)/(width+height));
 				const index = { x: xIndex, y: yIndex };
 				const score = (xIndex * width) + yIndex;
@@ -68,8 +77,8 @@ class Map {
 	}
 
 	setSquare({x, y}, square) {
-		this.array[x][y] = square;
-		square.position = {x, y};
+		this.array[x][y]          = square;
+		this.array[x][y].position = {x, y};
 	}
 
 	setColor({ x, y }, color) {
@@ -86,6 +95,34 @@ class Map {
 					canvas.width / this.width + 1,
 					canvas.height / this.height + 1
 				);
+
+				const redScore = square.red;// * this.width/255;
+				const greenScore = square.green;// * this.height/255;
+				// const redScore = square.position.x;
+				// const greenScore = square.position.y;
+
+				context.font = "12px Arial";
+				context.strokeStyle = "black";
+				context.lineWidth = 2;
+				context.strokeText(
+					"["+Math.floor(greenScore)+"]["+Math.floor(redScore)+"]",//square.score,
+					((square.position.x / this.width) * canvas.width) + 0.3 * (canvas.width / this.width + 1) - 10,
+					((square.position.y / this.height) * canvas.height) + 0.3 * (canvas.height / this.height + 1)
+				);
+				context.fillStyle = "white";
+				context.fillText(
+					"["+Math.floor(greenScore)+"]["+Math.floor(redScore)+"]",//square.score,
+					((square.position.x / this.width) * canvas.width) + 0.3 * (canvas.width / this.width + 1) - 10,
+					((square.position.y / this.height) * canvas.height) + 0.3 * (canvas.height / this.height + 1)
+				);
+				// function drawStroked(text, x, y) {
+				//     ctx.font = "80px Sans-serif"
+				//     ctx.strokeStyle = 'black';
+				//     ctx.lineWidth = 8;
+				//     ctx.strokeText(text, x, y);
+				//     ctx.fillStyle = 'white';
+				//     ctx.fillText(text, x, y);
+				// }
 			});
 		});
 	}
@@ -157,12 +194,71 @@ class Map {
 class MapSolver {
 	constructor(map, sorter) {
 		this.map    = map;
-		this.sorter = sorter(this.map.getArray()[0]);
+		// this.sorter = sorter(this.map.getArray()[0]);
+		this.arrayIndex = 0;
+		this.arrayDirection = "vertical";
+		this.sorter = sorter;
+		this.stepper = this.sorter(this.altGetNextArray(), this.compare);
+
+	}
+	compare(squareOne, squareTwo) {
+		if(this.arrayDirection === "vertical"){
+			// return (squareOne.green + (1/(squareOne.red+0.01))) - (squareTwo.green + (1/(squareTwo.red+0.01)));// + (1 / squareOne.red - 1 / squareTwo.red);
+			return squareOne.green - squareTwo.green || squareOne.red - squareTwo.red;
+		} else {
+			// return (squareOne.red + (1/(squareOne.green+0.01))) - (squareTwo.red + (1/(squareTwo.green+0.01)));//
+			// return (squareOne.red - squareTwo.red) + (1 / squareOne.green - 1 / squareTwo.green);
+			return squareOne.red - squareTwo.red || squareOne.green - squareTwo.green;
+		}
+	}
+	altGetNextArray() {
+		let rArray = null;
+		if(this.arrayDirection === "vertical"){
+			this.arrayDirection = "horizontal";
+			rArray = Array.from(this.map.getArray(), (val) => {return val[this.arrayIndex].position});
+
+		} else {
+			this.arrayDirection = "vertical";
+
+			rArray = Array.from(this.map.getArray()[this.arrayIndex], (val) => {return val.position});
+			this.arrayIndex += 1;
+		}
+		if(this.arrayIndex >= this.map.width){
+			this.arrayIndex = 0;
+		}
+		return rArray;
+	}
+	getNextArray(){
+		this.arrayIndex += 1;
+		if(this.arrayDirection === "vertical"){
+			if(this.arrayIndex >= this.map.width){
+				this.arrayIndex = -1;
+				this.arrayDirection = "horizontal";
+				return this.getNextArray();
+			}
+
+			return Array.from(this.map.getArray()[this.arrayIndex], (val) => {return val.position});
+		}else{
+			if(this.arrayIndex >= this.map.height){
+				this.arrayIndex = -1;
+				this.arrayDirection = "vertical";
+				return this.getNextArray();
+			}
+			const rArray = Array.from(this.map.getArray(), (val) => {return val[this.arrayIndex].position});
+			if(rArray[0] === undefined){
+				console.log(rArray);
+			}
+			return rArray;
+		}
+
 	}
 
 	step() {
-		if (this.sorter.next().done) {
-			this.map.scramble();
+		if (this.stepper.next().done) {
+			// this.map.scramble();
+			const array = this.altGetNextArray();
+			// console.log(array);
+			this.stepper = this.sorter(array, this.compare);
 		}
 	}
 
@@ -229,18 +325,7 @@ class Bot {
 		this.inventory = null;
 	}
 
-	// draw() {
-
-	// }
-
 	tick() {
-		// find a square to pick up
-		// move to it
-		// pick it up
-		// find a position to drop it
-		// move to it
-		// drop it
-		// loop
 		if (this.inventory === null
 			&& this.goal === null) {
 			findSquare();
@@ -248,9 +333,9 @@ class Bot {
 	}
 }
 
-const compare = function compare(valOne, valTwo){
-	return valOne - valTwo;
-}
+// const compare = function compare(valOne, valTwo){
+// 	return valOne - valTwo;
+// }
 
 // let map = new Map(192,108);
 const map = new Map(mapWidth, mapHeight);
@@ -258,7 +343,7 @@ const solver = BasketSort;
 const mapSolver = new MapSolver(map, solver);
 let interval = null;
 
-const fps = 3;
+const fps = 60;
 const tick = function tick() {
 	try {
 		mapSolver.step();
